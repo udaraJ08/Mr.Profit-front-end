@@ -7,12 +7,6 @@ import { Box } from 'native-base'
 import LinearGradient from 'react-native-linear-gradient'
 
 export class ExpencesTabs extends Component {
-
-    ///////////API Calling//////////////
-    deleteExpence = () => {
-
-    }
-
     render() {
         return (
             <LinearGradient
@@ -67,7 +61,12 @@ export class ExpencesTabs extends Component {
                     paddingRight: 20,
                     paddingBottom: 15
                 }}
-                    onLongPress={() => { this.props.btnDelete(this.props.data.name) }}>
+                    onLongPress={() => {
+                        this.props.btnDelete({
+                            id: this.props.data.id,
+                            item: this.props.data.name
+                        })
+                    }}>
                     <Icon name="trash" color={"white"} size={30} />
 
                 </TouchableOpacity>

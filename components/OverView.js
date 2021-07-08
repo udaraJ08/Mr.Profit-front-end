@@ -1,4 +1,4 @@
-import { Box } from 'native-base'
+import { Box, useToast } from 'native-base'
 import React, { Component } from 'react'
 import { Text, StyleSheet, ScrollView } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -10,8 +10,11 @@ import BasicLoading from './loadingScreens/BasicLoading'
 //import installed node modules
 import LinearGradient from 'react-native-linear-gradient'
 import ExpencesTabs from './subComponents/ExpencesTabs';
+import YearMonthCalender from './utils/YearMonthCalender';
 
 export class OverView extends Component {
+
+    expencesTabsArr = [];
 
     constructor(props) {
         super(props)
@@ -20,26 +23,27 @@ export class OverView extends Component {
             expences: {
                 name: "udara"
             },
-            loading: true
+            loading: true,
+            months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         }
         this.btnDelete = this.btnDelete.bind(this);
+
+        this.setDate = this.setDate.bind(this)
     }
 
     ///////////Life cycle methods/////////
     componentDidMount() {
-        this.fetchingExpences()
+        this.setToday()
     }
 
+
     /////////API Calling///////////////////
-    fetchingExpences = async () => {
-        const date = new Date();
+    fetchingExpences = async (month, year) => {
 
-        const month = date.getMonth()
-        const year = date.getFullYear()
+        console.log(month + "::month");
+        console.log(year + "::year");
 
-        console.log(`${month}-${year}`);
-
-        const rawResponse = await fetch("https://mrprofit.herokuapp.com/find/bytime", {
+        await fetch("https://mrprofit.herokuapp.com/find/bytime", {
             method: "POST",
             headers: {
                 Accept: 'application/json',
@@ -48,38 +52,97 @@ export class OverView extends Component {
             body: JSON.stringify({
                 "time": {
                     "year": 2021,
-                    "month": "june"
+                    "month": month.toLowerCase()
                 }
             }),
         }).then(response => response.json()).then(
             data => {
+                console.log(data);
+                if (data.length > 0) {
+                    this.setState({
+                        ...this,
+                        expences: data[0],
+                        loading: false
+                    })
+                } else {
+                    this.setState({
+                        ...this,
+                        expences: {
+                            "time": {
+                                "year": "....",
+                                "month": "...."
+                            },
+                            "_id": "60e13b4865050f0015c247e0",
+                            "userID": "....",
+                            "income": 0,
+                            "expences": {
+                            },
+                            "expencesAmount": 0,
+                            "profit": 0,
+                        },
+                        loading: false
+                    })
+                }
+            }).catch(err => {
+                if (err)
+                    console.log(err.message);
+            })
+    }
+
+    deletingExpencesItem = async (data) => {
+
+        await fetch("http://mrprofit.herokuapp.com/delete/expences/item", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                'Content-type': "application/json"
+            },
+            body: JSON.stringify(data)
+        }).then(res => res.json()).
+            then(data => {
+                console.log(data);
                 this.setState({
-                    expences: data[0],
+                    expences: data,
                     loading: false
                 })
-            }
-        )
+                this.fetchingExpences()
+            }).catch(err => {
+                if (err)
+                    console.log(err.message);
+            })
     }
 
-    ////////State handeling///////////////
-
-    ////////Lead functions///////////////
-    testClick = () => {
-        console.log(this.state.expences.time.year);
+    /////State changin//////////////////
+    setDate = (month, year) => {
+        this.fetchingExpences(month, year)
     }
+
+    setToday = () => {
+        const date = new Date();
+
+        const month = date.getUTCMonth()
+        const year = date.getFullYear()
+        this.setState({
+            ...this,
+            month: this.state.months[month],
+            year: year
+        })
+        this.fetchingExpences(this.state.months[month], year)
+    }
+
+    ////////Lead Functions///////////////
 
     btnDelete = (data) => {
-        alert(data)
+        const setData = {
+            _id: data.id,
+            item: data.item
+        }
+        this.deletingExpencesItem(setData)
     }
 
     /////////Event managing/////////////
 
     render() {
-        const arr = {
-            name: "udara",
-            age: 20,
-            address: "Panadura"
-        }
         if (this.state.loading) {
             return (
                 <BasicLoading message={"Cooking your data..."} />
@@ -88,15 +151,7 @@ export class OverView extends Component {
             const exp = this.state.expences
             return (
                 <ScrollView style={style.container}>
-                    <Box style={style.overview}>
-                        <Text style={{
-                            fontFamily: "Staatliches-Regular",
-                            fontWeight: "500",
-                            fontSize: 25,
-                            color: "#57606f"
-                        }}>overview</Text>
 
-                    </Box>
                     <Box style={style.overview, {
                         flexDirection: "row",
                         justifyContent: "space-around",
@@ -108,8 +163,9 @@ export class OverView extends Component {
                             fontFamily: "Staatliches-Regular",
                             fontWeight: "500",
                             fontSize: 40,
-                            color: "#686de0"
+                            color: "#686de0",
                         }}>{exp.time.year}</Text>
+                        <YearMonthCalender setNewDate={this.setDate} />
                         <Text style={{
                             fontFamily: "Staatliches-Regular",
                             fontWeight: "500",
@@ -259,18 +315,18 @@ export class OverView extends Component {
                                         height: "100%"
                                     }}>
                                         {
-                                            Object.keys(exp.expences).map(element => {
-                                                return (
-                                                    <ExpencesTabs
-                                                        data={{
-                                                            name: element,
-                                                            amount: exp.expences[element],
-                                                            month: exp.time.month,
-                                                            year: exp.time.year
-                                                        }}
-                                                        btnDelete={this.btnDelete}
-                                                    />
-                                                )
+                                            Object.keys(this.state.expences.expences).map(element => {
+                                                return (<ExpencesTabs
+                                                    key={element}
+                                                    data={{
+                                                        id: this.state.expences._id,
+                                                        name: element,
+                                                        amount: this.state.expences.expences[element],
+                                                        month: this.state.expences.time.month,
+                                                        year: this.state.expences.time.year
+                                                    }}
+                                                    btnDelete={this.btnDelete}
+                                                />)
                                             })
                                         }
                                     </ScrollView>

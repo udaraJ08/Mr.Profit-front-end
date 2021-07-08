@@ -3,41 +3,46 @@ import React, { Component } from 'react'
 import { NavigationContainer } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import Home from './components/Home'
+import { CardStyleInterpolators } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
+import { HeaderStyleInterpolators } from '@react-navigation/stack';
+import MainNavigatorController from './components/navigateControllers/MainNavigatorController';
+import Login from './components/login/Login';
+import Signup from './components/login/Signup';
 
-import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
-import OverView from './components/OverView';
-
-const Tab = createMaterialBottomTabNavigator();
+const Stack = createStackNavigator();
 
 export class App extends Component {
   render() {
     return (
       <NativeBaseProvider>
         <NavigationContainer>
-          <Tab.Navigator
+          <Stack.Navigator
             shifting="true"
-            activeColor="#f0edf6"
-            inactiveColor="white"
+            screenOptions={({ route, navigation }) => ({
+              gestureEnabled: true,
+              cardOverlayEnabled: true,
+              gestureDirection: "horizontal",
+              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              headerStyleInterpolator: HeaderStyleInterpolators.forFade,
+            })}
           >
-            <Tab.Screen
+            <Stack.Screen
               options={{
-                tabBarColor: '#43a8d6',
-                tabBarIcon: ({ tintColor }) => (
-                  <Icon name="list-alt" color={"white"} size={25} />
-                )
+                headerShown: false,
               }}
-              name="overview" component={OverView} />
-            <Tab.Screen
+              name="login" component={Login} />
+            <Stack.Screen
               options={{
-                tabBarColor: '#43a8d6',
-                tabBarIcon: ({ tintColor }) => (
-                  <Icon name="list-alt" color={"white"} size={25} />
-                )
+                headerShown: false,
               }}
-              name="home" component={Home} />
-
-          </Tab.Navigator>
+              name="signup" component={Signup} />
+            <Stack.Screen
+              options={{
+                headerShown: false,
+              }}
+              name="main" component={MainNavigatorController} />
+          </Stack.Navigator>
         </NavigationContainer>
       </NativeBaseProvider>
     )
