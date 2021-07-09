@@ -1,4 +1,4 @@
-import { Box, useToast } from 'native-base'
+import { Box } from 'native-base'
 import React, { Component } from 'react'
 import { Text, StyleSheet, ScrollView } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -11,6 +11,8 @@ import BasicLoading from './loadingScreens/BasicLoading'
 import LinearGradient from 'react-native-linear-gradient'
 import ExpencesTabs from './subComponents/ExpencesTabs';
 import YearMonthCalender from './utils/YearMonthCalender';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export class OverView extends Component {
 
@@ -38,10 +40,7 @@ export class OverView extends Component {
 
 
     /////////API Calling///////////////////
-    fetchingExpences = async (month, year) => {
-
-        console.log(month + "::month");
-        console.log(year + "::year");
+    fetchingExpences = async (month, year, user) => {
 
         await fetch("https://mrprofit.herokuapp.com/find/bytime", {
             method: "POST",
@@ -50,18 +49,19 @@ export class OverView extends Component {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                "userID": user,
                 "time": {
-                    "year": 2021,
+                    "year": year,
                     "month": month.toLowerCase()
                 }
             }),
         }).then(response => response.json()).then(
             data => {
                 console.log(data);
-                if (data.length > 0) {
+                if (data) {
                     this.setState({
                         ...this,
-                        expences: data[0],
+                        expences: data,
                         loading: false
                     })
                 } else {
@@ -80,12 +80,14 @@ export class OverView extends Component {
                             "expencesAmount": 0,
                             "profit": 0,
                         },
-                        loading: false
+                        loading: false,
                     })
                 }
             }).catch(err => {
-                if (err)
-                    console.log(err.message);
+                if (err) {
+                    this.props.navigation.navigate("dashboard", { name: "OverViewDashboard" })
+                    console.log(err.message());
+                }
             })
     }
 
@@ -105,29 +107,34 @@ export class OverView extends Component {
                     expences: data,
                     loading: false
                 })
-                this.fetchingExpences()
+                this.fetchingExpences(data.time.month, data.time.year, data.userID)
             }).catch(err => {
                 if (err)
-                    console.log(err.message);
+                    console.log(err.message());
             })
     }
 
     /////State changin//////////////////
-    setDate = (month, year) => {
-        this.fetchingExpences(month, year)
+    setDate = async (month, year) => {
+
+        const user = await this.getUserFromAsyncStore()
+
+        this.fetchingExpences(month, year, user.username)
     }
 
-    setToday = () => {
+    setToday = async () => {
         const date = new Date();
 
         const month = date.getUTCMonth()
         const year = date.getFullYear()
+        const user = await this.getUserFromAsyncStore()
+        console.log(user);
         this.setState({
             ...this,
             month: this.state.months[month],
             year: year
         })
-        this.fetchingExpences(this.state.months[month], year)
+        this.fetchingExpences(this.state.months[month], year, user.username)
     }
 
     ////////Lead Functions///////////////
@@ -137,7 +144,20 @@ export class OverView extends Component {
             _id: data.id,
             item: data.item
         }
+
+        console.log(setData);
         this.deletingExpencesItem(setData)
+    }
+
+    getUserFromAsyncStore = async () => {
+        try {
+            const raw = await AsyncStorage.getItem('user')
+            const data = raw != null ? JSON.parse(raw) : null;
+            return data.data;
+        } catch (e) {
+            if (e)
+                console.log(e.message());
+        }
     }
 
     /////////Event managing/////////////
@@ -151,7 +171,9 @@ export class OverView extends Component {
             const exp = this.state.expences
             return (
                 <ScrollView style={style.container}>
-
+                    <Box style={[style.mainTopicContainer, normalize.center]}>
+                        <Text style={style.txtMaintopic}>OVERVIEW</Text>
+                    </Box>
                     <Box style={style.overview, {
                         flexDirection: "row",
                         justifyContent: "space-around",
@@ -352,6 +374,15 @@ const style = StyleSheet.create({
         backgroundColor: '#f1f2f6',
         flex: 1,
     },
+    mainTopicContainer: {
+        height: 50,
+        backgroundColor: "#005380"
+    },
+    txtMaintopic: {
+        color: "#eccc68",
+        fontSize: 30,
+        fontFamily: "Staatliches-Regular",
+    },
     overview: {
         width: "100%",
         height: 50,
@@ -394,6 +425,13 @@ const style = StyleSheet.create({
         width: "90%",
         height: "95%",
     },
+})
+
+const normalize = StyleSheet.create({
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center'
+    }
 })
 
 export default OverView

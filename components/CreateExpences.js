@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 ////importing customer Components
 import YearMonthCalender from './utils/YearMonthCalender';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export class CreateExpences extends Component {
 
@@ -45,9 +46,9 @@ export class CreateExpences extends Component {
             res.json()
         }).then(data => {
             alert("Success !!!")
-            console.log(data);
+            this.cleanState()
         }).catch(err => {
-            if (err) console.log(err);
+            if (err) alert("An error occured !!!")
         })
     }
 
@@ -65,7 +66,7 @@ export class CreateExpences extends Component {
     /////event handlers///////
     handleIncome = (e) => {
         this.setState({
-            // ...this,
+            ...this,
             income: e
         })
     }
@@ -95,7 +96,7 @@ export class CreateExpences extends Component {
     }
 
     /////event handeling
-    btnSubmit = () => {
+    btnSubmit = async () => {
 
         let tempExp = {}
 
@@ -104,12 +105,13 @@ export class CreateExpences extends Component {
         })
 
         const data = {
-            "userID": "C-001",
+            "userID": await this.getUserFromAsyncStore(),
             "year": this.state.date.year,
             "month": this.state.date.month,
             "income": this.state.income,
             "expences": tempExp
         }
+        console.log(data);
         this.createExpAPI(data)
     }
 
@@ -123,6 +125,19 @@ export class CreateExpences extends Component {
         this.cleanExpItems()
     }
 
+    //////Lead functions/////////////
+    getUserFromAsyncStore = async () => {
+        try {
+            const raw = await AsyncStorage.getItem('user')
+            const data = raw != null ? JSON.parse(raw) : null;
+            console.log("create exp:::" + data.data.username);
+            return data.data.username;
+        } catch (e) {
+            if (e)
+                console.log(e.message());
+        }
+    }
+
     ///////////cleaners//////////////
     cleanExpItems = () => {
         this.setState({
@@ -131,6 +146,23 @@ export class CreateExpences extends Component {
                 name: "",
                 amount: ""
             }
+        })
+    }
+
+    cleanState = () => {
+        this.setState({
+            date: {
+                year: ".....",
+                month: "....."
+            },
+            income: "",
+            expence: "",
+            amount: "",
+            item: {
+                name: "",
+                amount: ""
+            },
+            expenceItemsArr: []
         })
     }
 
@@ -246,17 +278,21 @@ export class CreateExpences extends Component {
                                     flex: 1,
                                     marginLeft: 5,
                                 }}>
-                                    <TouchableOpacity style={style.btnAddExp}>
+
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            this.btnAddExpItem()
+                                        }}
+                                        style={style.btnAddExp}>
                                         <Text
-                                            onPress={() => {
-                                                this.btnAddExpItem()
-                                            }}
                                             style={{
                                                 fontFamily: "Staatliches-Regular",
                                                 fontSize: 20,
                                                 color: "#f7f1e3"
                                             }}
-                                        >ADD</Text>
+                                        >
+                                            ADD
+                                        </Text>
                                     </TouchableOpacity>
                                 </Box>
                             </Box>

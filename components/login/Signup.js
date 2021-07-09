@@ -1,21 +1,147 @@
 import React, { Component } from 'react'
-import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, StatusBar } from 'react-native'
+import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, StatusBar, TouchableHighlightBase } from 'react-native'
 import { Box, FormControl, Input } from 'native-base'
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Wave } from 'react-native-animated-spinkit'
 
 export class Signup extends Component {
 
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            username: "",
+            password: "",
+            repassword: "",
+            isloading: false,
+            err: {
+                errUserMsg: "",
+                rePW: ""
+            },
+            welcomeMsg: ""
+        }
+    }
+
 
     /////////API calling////////////
+    signupUser = async (data) => {
+
+        console.log(data);
+        this.changeStateLoading(true)
+        await fetch("https://mrprofit.herokuapp.com/user/signup", {
+            method: "POST",
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(res => res.json()).
+            then(data => {
+                this.changeStateLoading(false)
+                this.cleanState()
+                this.setWelcomeMsg()
+            }).catch(err => {
+                if (err) {
+                    this.changeStateLoading(false)
+                    console.log(err.message);
+                }
+            })
+    }
 
     ////////state changing/////////
+    changeStateLoading = (dis) => {
+        this.setState({
+            ...this,
+            isloading: dis
+        })
+    }
+
+    rePwerrMsgStateSet = () => {
+
+        this.setState({
+            err: {
+                errUserMsg: "",
+                rePW: "*.Your passwords don't match"
+            }
+        })
+    }
+
+    setWelcomeMsg = () => {
+        this.setState({
+            ...this,
+            welcomeMsg: "You successfully signed up !!!"
+        })
+    }
 
     ///////event Handeling////////
     btnNavToLogin = () => {
+        this.cleanState()
         this.props.navigation.navigate("login", { name: "Login" })
     }
 
+    txtUserNameOnChange = (e) => {
+
+        this.setState({
+            ...this,
+            username: e
+        })
+    }
+
+    txtPasswordOnChange = (e) => {
+
+        this.setState({
+            ...this,
+            password: e
+        })
+    }
+
+    txtRePasswordOnChange = (e) => {
+
+        this.setState({
+            ...this,
+            repassword: e
+        })
+    }
+
+    btnSignup = () => {
+
+        if (!this.state.isloading) {
+            const pw = this.state.password;
+            const repw = this.state.repassword
+
+            if (pw !== repw) {
+                this.rePwerrMsgStateSet()
+                return;
+            }
+
+            const data = {
+                "username": this.state.username,
+                "password": pw
+            }
+
+            this.signupUser(data)
+        }
+    }
+
     //////lead functions//////////
+    popupModal = () => {
+
+    }
+
+    ///////cleaners//////////////
+    cleanState = () => {
+        this.setState({
+            username: "",
+            password: "",
+            repassword: "",
+            isloading: false,
+            err: {
+                errUserMsg: "",
+                rePW: ""
+            },
+            welcomeMsg: ""
+        })
+    }
 
     render() {
         return (
@@ -39,17 +165,20 @@ export class Signup extends Component {
                     <Box style={[style.formMidContanier]}>
                         <Text style={[style.inputLabels]}>User name
                             {"   "}
-                            <Icon name="user" color={"#ced6e0"} size={20} />
+                            <Icon name="user" color={"#dfe4ea"} size={20} />
                         </Text>
                         <Text></Text>
                         <FormControl>
                             <Input
+                                onChangeText={e => { this.txtUserNameOnChange(e) }}
+                                value={this.state.username}
+
                                 placeholder="username..."
-                                placeholderTextColor="#dfe4ea"
+                                placeholderTextColor="#95afc0"
                                 color={"#dfe4ea"}
                                 style={style.inputFields}></Input>
+                            <Text style={style.errMsg}>{this.state.err.errUserMsg}</Text>
                         </FormControl>
-                        <Text></Text>
                         <Text style={[style.inputLabels]}>Password
                             {"   "}
                             <Icon name="lock" color={"#ced6e0"} size={20} />
@@ -57,31 +186,49 @@ export class Signup extends Component {
                         <Text></Text>
                         <FormControl>
                             <Input
+                                onChangeText={e => { this.txtPasswordOnChange(e) }}
+                                value={this.state.password}
+
                                 secureTextEntry={true}
                                 placeholder="Password"
-                                placeholderTextColor="#dfe4ea"
+                                placeholderTextColor="#95afc0"
                                 color={"#dfe4ea"}
                                 style={style.inputFields}></Input>
+                            <Text style={style.errMsg}>{this.state.err.rePW}</Text>
+
                         </FormControl>
-                        <Text></Text>
+
                         <Text style={[style.inputLabels]}>Re-enter password
                             {"   "}
                             <Icon name="lock" color={"#ced6e0"} size={20} />
+
                         </Text>
                         <Text></Text>
                         <FormControl>
                             <Input
+                                onChangeText={(e) => { this.txtRePasswordOnChange(e) }}
+                                value={this.state.repassword}
+
                                 secureTextEntry={true}
                                 placeholder="Re-Enter Password"
-                                placeholderTextColor="#dfe4ea"
+                                placeholderTextColor="#95afc0"
                                 color={"#dfe4ea"}
                                 style={style.inputFields}></Input>
+                            <Text style={style.errMsg}>{this.state.err.rePW}</Text>
                         </FormControl>
                         <Text></Text>
-                        <Text></Text>
                         <Box style={[style.btnContainer, normalize.center]}>
-                            <TouchableOpacity style={[style.btnLogin, normalize.center]}>
-                                <Text style={style.txtLogin}>SIGNUP</Text>
+                            <TouchableOpacity
+                                onPress={() => { this.btnSignup() }}
+                                style={[style.btnLogin, normalize.center]}>
+                                <Text style={style.txtLogin}>SIGNUP {"   "}
+                                    {
+                                        (() => {
+                                            if (this.state.isloading)
+                                                return <Wave size={20} color="#ffffff" />
+                                        })()
+                                    }
+                                </Text>
                             </TouchableOpacity>
                             <Text></Text>
                             <TouchableOpacity
@@ -89,6 +236,8 @@ export class Signup extends Component {
                                 style={[style.btnSignup, normalize.center]}>
                                 <Text style={style.txtSubBtn}>Having an account ?</Text>
                             </TouchableOpacity>
+                            <Text></Text>
+                            <Text style={style.txtWelcomeBtn}>{this.state.welcomeMsg}</Text>
                         </Box>
                     </Box>
                 </Box>
@@ -125,7 +274,7 @@ const style = StyleSheet.create({
     },
     inputFields: {
         width: "100%",
-        borderColor: "#dff9fb",
+        borderColor: "#95afc0",
         borderWidth: 1
     },
     inputLabels: {
@@ -143,7 +292,7 @@ const style = StyleSheet.create({
     },
     txtLogin: {
         fontSize: 30,
-        color: "white",
+        color: "#dfe4ea",
         fontFamily: "Staatliches-Regular",
     },
     btnContainer: {
@@ -151,8 +300,16 @@ const style = StyleSheet.create({
     },
     txtSubBtn: {
         fontFamily: "Quicksand-VariableFont_wght",
-        color: "white",
+        color: "#dfe4ea",
         fontSize: 15
+    },
+    txtWelcomeBtn: {
+        fontFamily: "Quicksand-VariableFont_wght",
+        color: "#ff6b81",
+        fontSize: 20
+    },
+    errMsg: {
+        color: "#ff6b81"
     }
 })
 

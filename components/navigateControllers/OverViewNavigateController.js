@@ -33,7 +33,11 @@ export class OverViewNavigateController extends Component {
                     }}
                     name="create"
                     component={CreateExpences} />
-                <Stack.Screen name="overview" component={OverView} />
+                <Stack.Screen
+                    options={{
+                        headerShown: false,
+                    }}
+                    name="overviewMain" component={OverView} />
             </Stack.Navigator>
         )
     }

@@ -4,9 +4,6 @@ import { StyleSheet, Text, TouchableOpacity, ImageBackground } from 'react-nativ
 import { Box, Image } from 'native-base'
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-//requiring images
-
-
 export class OverViewDashboard extends Component {
 
 
@@ -15,7 +12,7 @@ export class OverViewDashboard extends Component {
     }
 
     btnOverView = () => {
-        this.props.navigation.navigate("signup", { name: "Signup" })
+        this.props.navigation.navigate("overviewMain", { name: "OverView" })
     }
 
     btnCreateExp = () => {
@@ -30,22 +27,23 @@ export class OverViewDashboard extends Component {
     render() {
         return (
             <ImageBackground
-                source={{ uri: "https://wallpaperaccess.com/full/698623.png" }}
+                source={{ uri: "https://i.pinimg.com/originals/aa/b1/ac/aab1ac66d88ed8784e14aa8a68cd65e9.jpg" }}
                 style={style.container}>
                 <Box style={style.topicContainer}>
                     <Text style={style.mainTopic}>Mr.Profit Manager</Text>
+                    {/* <Text></Text> */}
+                    <Text style={[style.subTopic]}>Your personal money manager...</Text>
                     <Text></Text>
-                    <Image
+                    <Text></Text>
+                    <Icon
                         style={{
-                            backgroundColor: '#f6e58d',
-                            borderRadius: 100,
+                            backgroundColor: '#0f76a3',
+                            padding: 10,
+                            borderRadius: 100
                         }}
-                        source={{
-                            uri: "https://image.flaticon.com/icons/png/512/1580/1580764.png",
-                        }}
-                        alt="Alternate Text"
-                        size={"md"}
-                    />
+                        name="rocket"
+                        color={"#dfe4ea"} size={50} />
+
                 </Box>
                 <Box style={style.buttonContainer}>
 
@@ -53,32 +51,30 @@ export class OverViewDashboard extends Component {
                         onPress={() => {
                             this.btnOverView()
                         }}
-                        style={[style.expencesButtons, { borderColor: '#7bed9f' }]}>
+                        style={[style.expencesButtons]}>
                         <Text style={[
                             style.btnContentTxt,
-                            { color: '#7bed9f' }
                         ]}>Overview</Text>
-                        <Icon name="list-alt" color={"#7bed9f"} size={25} />
+                        <Icon
+                            name="list-alt" color={"#f1f2f6"} size={25} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         onPress={() => {
                             this.btnCreateExp()
                         }}
-                        style={[style.expencesButtons, { borderColor: '#7ed6df' }]}>
+                        style={[style.expencesButtons]}>
                         <Text style={[
                             style.btnContentTxt,
-                            { color: '#7ed6df' }
                         ]}>Create Expence</Text>
-                        <Icon name="pencil-square-o" color={"#7ed6df"} size={25} />
+                        <Icon name="pencil-square-o" color={"#f1f2f6"} size={25} />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={[style.expencesButtons, { borderColor: '#ff7979' }]}>
+                    <TouchableOpacity style={[style.expencesButtons]}>
                         <Text style={[
                             style.btnContentTxt,
-                            { color: '#ff7979' }
                         ]}>Update expences</Text>
-                        <Icon name="coffee" color={"#ff7979"} size={25} />
+                        <Icon name="coffee" color={"#f1f2f6"} size={25} />
                     </TouchableOpacity>
                 </Box>
             </ImageBackground>
@@ -95,7 +91,12 @@ const style = StyleSheet.create({
     mainTopic: {
         fontFamily: "Staatliches-Regular",
         fontSize: 40,
-        color: "#f6e58d"
+        color: "#dff9fb"
+    },
+    subTopic: {
+        fontFamily: "Quicksand-VariableFont_wght",
+        fontSize: 15,
+        color: "#ffffff"
     },
     topicContainer: {
         flex: 1,
@@ -104,20 +105,19 @@ const style = StyleSheet.create({
         alignItems: 'center'
     },
     buttonContainer: {
-        flex: 1,
+        flex: 1.5,
         width: "100%",
         justifyContent: 'space-evenly',
         alignItems: 'center',
         borderTopLeftRadius: 50,
         borderTopRightRadius: 50,
-        backgroundColor: '#005380'
     },
     expencesButtons: {
         width: "70%",
         height: 60,
         backgroundColor: 'transparent',
         borderRadius: 10,
-        borderColor: 'crimson',
+        borderColor: '#ffffff',
         borderWidth: 1.5,
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -128,8 +128,8 @@ const style = StyleSheet.create({
     btnContentTxt: {
         fontSize: 17,
         fontFamily: "Quicksand-Medium",
-        color: "#57606f",
-    }
+        color: "#ffffff",
+    },
 })
 
 export default OverViewDashboard

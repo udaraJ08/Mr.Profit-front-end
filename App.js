@@ -10,6 +10,9 @@ import MainNavigatorController from './components/navigateControllers/MainNaviga
 import Login from './components/login/Login';
 import Signup from './components/login/Signup';
 
+import { ToastProvider } from 'react-native-styled-toast'
+import MainLoader from './components/loadingScreens/MainLoader';
+
 const Stack = createStackNavigator();
 
 export class App extends Component {
@@ -29,7 +32,14 @@ export class App extends Component {
           >
             <Stack.Screen
               options={{
+                gestureEnabled: false,
                 headerShown: false,
+              }}
+              name="mainLoader" component={MainLoader} />
+            <Stack.Screen
+              options={{
+                headerShown: false,
+                gestureEnabled: false,
               }}
               name="login" component={Login} />
             <Stack.Screen
@@ -40,6 +50,7 @@ export class App extends Component {
             <Stack.Screen
               options={{
                 headerShown: false,
+                gestureEnabled: false,
               }}
               name="main" component={MainNavigatorController} />
           </Stack.Navigator>

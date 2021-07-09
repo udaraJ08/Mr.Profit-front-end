@@ -2,19 +2,127 @@ import React, { Component } from 'react'
 import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, StatusBar } from 'react-native'
 import { Box, FormControl, Input } from 'native-base'
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Wave } from 'react-native-animated-spinkit'
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export class Login extends Component {
 
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            username: "",
+            password: "",
+            err: {
+                pwErrMsg: "",
+                userMsg: ""
+            },
+            isloading: false
+        }
+    }
+
+
     /////////API calling////////////
+    userLogin = async (data) => {
+
+        this.setLoader(true)
+        await fetch("https://mrprofit.herokuapp.com/user/login", {
+            method: "POST",
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(res => res.json()).
+            then(data => {
+                this.setLoader(false)
+                if (data.satus) {
+                    this.btnNavToDashboard()
+                    this.cleanState()
+                    this.userDataPlacementInAsyncStorage(data)
+                } else {
+                    this.setErrMsg(data.password, data.username)
+                }
+            }).catch(err => {
+                if (err) console.log(err.message);
+            })
+    }
 
     ////////state changing/////////
+    setErrMsg = (password, username) => {
+        this.setState({
+            ...this,
+            err: {
+                pwErrMsg: password,
+                userMsg: username
+            }
+        })
+    }
+
+    setLoader = (dis) => {
+
+        this.setState({
+            isloading: dis
+        })
+    }
 
     ///////event Handeling////////
     btnNavToSignup = () => {
         this.props.navigation.navigate("signup", { name: "Signup" })
     }
 
+    btnNavToDashboard = () => {
+        this.props.navigation.navigate("main", { name: "MainNavigatorController" })
+    }
+
+    btnLogin = () => {
+        const data = {
+            "username": this.state.username,
+            "password": this.state.password
+        }
+
+        if (!this.state.isloading)
+            this.userLogin(data)
+    }
+
+    txtUsernameOnChange = (e) => {
+
+        this.setState({
+            ...this,
+            username: e
+        })
+    }
+
+    txtPasswordOnChange = (e) => {
+
+        this.setState({
+            ...this,
+            password: e
+        })
+    }
     //////lead functions//////////
+    userDataPlacementInAsyncStorage = async (data) => {
+
+        console.log(data);
+        try {
+            await AsyncStorage.setItem('user', JSON.stringify(data))
+        } catch (e) {
+            console.log(e.message());
+        }
+    }
+
+    /////////cleaners/////////////
+    cleanState = () => {
+        this.setState({
+            username: "",
+            password: "",
+            err: {
+                pwErrMsg: "",
+                userMsg: ""
+            }
+        })
+    }
 
     render() {
         return (
@@ -44,12 +152,14 @@ export class Login extends Component {
                         <Text></Text>
                         <FormControl>
                             <Input
+                                onChangeText={e => { this.txtUsernameOnChange(e) }}
+                                value={this.state.username}
                                 placeholder="username..."
                                 placeholderTextColor="#c8d6e5"
                                 color={"#c8d6e5"}
                                 style={style.inputFields}></Input>
                         </FormControl>
-                        <Text></Text>
+                        <Text style={style.txtErrorMsg}>{this.state.err.userMsg}</Text>
                         <Text></Text>
                         <Text style={[style.inputLabels]}>Password
                             {"   "}
@@ -58,17 +168,32 @@ export class Login extends Component {
                         <Text></Text>
                         <FormControl>
                             <Input
+                                onChangeText={e => { this.txtPasswordOnChange(e) }}
+                                value={this.state.password}
                                 secureTextEntry={true}
-                                placeholder="username..."
+                                placeholder="password..."
                                 placeholderTextColor="#c8d6e5"
                                 color={"#c8d6e5"}
                                 style={style.inputFields}></Input>
+                            <Text style={style.txtErrorMsg}>{this.state.err.pwErrMsg}</Text>
                         </FormControl>
                         <Text></Text>
                         <Text></Text>
                         <Box style={[style.btnContainer, normalize.center]}>
-                            <TouchableOpacity style={[style.btnLogin, normalize.center]}>
-                                <Text style={style.txtLogin}>LOGIN</Text>
+                            <TouchableOpacity
+                                onPress={() => { this.btnLogin() }}
+                                style={[style.btnLogin, normalize.center]}>
+                                <Text style={style.txtLogin}>LOGIN{"   "}
+
+                                    {
+                                        (() => {
+                                            if (this.state.isloading)
+                                                return <Wave size={20} color="#ffffff" />
+
+                                        })()
+                                    }
+
+                                </Text>
                             </TouchableOpacity>
                         </Box>
                         <Text></Text>
@@ -149,6 +274,9 @@ const style = StyleSheet.create({
         fontFamily: "Quicksand-VariableFont_wght",
         color: "white",
         fontSize: 15
+    },
+    txtErrorMsg: {
+        color: "#ff4757"
     }
 })
 
